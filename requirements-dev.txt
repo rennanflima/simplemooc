@@ -1,0 +1,16 @@
+-r requirements.txt
+coverage
+autopep8
+ipdb
+isort
+pep8
+pycodestyle
+pylint
+pylint-django
+pylint-plugin-utils
+safety
+pyupgrade
+jupyter
+pip-autoremove
+pipdeptree
+rich
