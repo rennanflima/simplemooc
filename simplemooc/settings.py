@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'simplemooc.core',
+    'simplemooc.courses',
 ]
 
 MIDDLEWARE = [
@@ -122,6 +123,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Media files
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = config('MEDIA_URL', default='/media/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
