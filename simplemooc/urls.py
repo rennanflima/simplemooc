@@ -20,6 +20,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('conta/', include('simplemooc.accounts.urls', namespace='accounts')),
     path('', include('simplemooc.core.urls', namespace='core')),
     path('cursos/', include('simplemooc.courses.urls', namespace='courses')),
 ]
