@@ -13,7 +13,6 @@ from .models import User
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'name', 'is_staff')
     search_fields = ('username', 'name', 'email')
-    add_form = RegisterForm
     readonly_fields = ('last_login', 'date_joined')
 
     fieldsets = (
@@ -27,7 +26,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'password1', 'password2'),
+            'fields': ('username', 'email', 'password1', 'password2'),
         }),
     )
     actions = ['activate_register', 'deactivate_register']
