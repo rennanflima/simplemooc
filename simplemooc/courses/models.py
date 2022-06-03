@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
@@ -34,3 +35,80 @@ class Course(models.Model):
 
     def get_absolute_url(self):
         return reverse('courses:details', kwargs={'slug': self.slug})
+
+
+class Enrollment(models.Model):
+    PENDENTE = 'PENDENTE'
+    APROVADO = 'APROVADO'
+    CANCELADO = 'CANCELADO'
+    STATUS_CHOICES = (
+        (PENDENTE, 'Pendente'),
+        (APROVADO, 'Aprovado'),
+        (CANCELADO, 'Cancelado'),
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name='usuário', related_name='enrollments')
+    course = models.ForeignKey('courses.Course', on_delete=models.PROTECT, verbose_name='curso', related_name='enrollments')
+    status = models.CharField('situação', max_length=30, choices=STATUS_CHOICES, default=PENDENTE, blank=True)
+    created_at = models.DateTimeField('criado em', auto_now_add=True)
+    updated_at = models.DateTimeField('atualizado em', auto_now=True)
+
+    class Meta:
+        verbose_name = 'inscrição'
+        verbose_name_plural = 'inscrições'
+        unique_together = (('user', 'course'),)
+
+    def active(self):
+        self.status = self.APROVADO
+        self.save()
+
+    def is_approved(self):
+        return self.status == self.APROVADO
+
+
+class Announcement(models.Model):
+    course = models.ForeignKey('courses.Course', on_delete=models.PROTECT, verbose_name='curso', related_name='announcements')
+    title = models.CharField('título', max_length=100)
+    content = models.TextField('conteúdo')
+    created_at = models.DateTimeField('criado em', auto_now_add=True)
+    updated_at = models.DateTimeField('atualizado em', auto_now=True)
+
+    class Meta:
+        verbose_name = 'anúncio'
+        verbose_name_plural = 'anúncios'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class Comment(models.Model):
+    announcement = models.ForeignKey('courses.Announcement', on_delete=models.PROTECT, verbose_name='anúncio', related_name='comments')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name='usuário', related_name='comments')
+    comment = models.TextField('comentário')
+    created_at = models.DateTimeField('criado em', auto_now_add=True)
+    updated_at = models.DateTimeField('atualizado em', auto_now=True)
+
+    class Meta:
+        verbose_name = 'comentário'
+        verbose_name_plural = 'comentários'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return self.comment
+
+
+def post_save_announcement(instance, created, **kwargs):
+    if created:
+        from simplemooc.core.mail import send_mail_template
+        subject = instance.title
+        context = {
+            'announcement': instance
+        }
+        template_name = 'courses/announcement_mail.html'
+        enrollments = instance.course.enrollments.filter(status=Enrollment.APROVADO)
+        for enrollment in enrollments:
+            recipient = [enrollment.user.email]
+            send_mail_template(subject, template_name, context, recipient)
+
+
+models.signals.post_save.connect(post_save_announcement, sender=Announcement, dispatch_uid='post_save_announcement')

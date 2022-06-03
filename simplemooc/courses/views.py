@@ -1,7 +1,12 @@
-from django.shortcuts import get_object_or_404, render
+import re
+from multiprocessing import context
 
-from .forms import ContactCourse
-from .models import Course
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .forms import CommentForm, ContactCourse
+from .models import Course, Enrollment
 
 
 # Create your views here.
@@ -29,4 +34,80 @@ def details(request, slug):
 
     context['course'] = course
     context['form'] = form
+    return render(request, template_name, context)
+
+
+@login_required
+def enrollment(request, slug):
+    course = get_object_or_404(Course, slug=slug)
+    enrollment, created = Enrollment.objects.get_or_create(user=request.user, course=course)
+    if created:
+        enrollment.active()
+        messages.success(request, 'Você foi inscrito no curso com sucesso.')
+    else:
+        messages.info(request, 'Você já está inscrito no curso.')
+
+    return redirect('accounts:dashboard')
+
+
+@login_required
+def undo_enrollment(request, slug):
+    course = get_object_or_404(Course, slug=slug)
+    enrollment = get_object_or_404(request.user.enrollments.all(), course=course)
+    template_name = 'courses/undo_enrollment.html'
+    if request.method == 'POST':
+        enrollment.delete()
+        messages.success(request, 'Sua inscrição foi cancelada com sucesso.')
+        return redirect('accounts:dashboard')
+    context = {
+        'course': course,
+        'enrollment': enrollment,
+    }
+    return render(request, template_name, context)
+
+
+@login_required
+def announcements(request, slug):
+    template_name = 'courses/announcements.html'
+    course = get_object_or_404(Course, slug=slug)
+    if not request.user.is_staff:
+        enrollment = get_object_or_404(request.user.enrollments.all(), course=course)
+
+        if not enrollment.is_approved():
+            messages.error(request, 'A sua inscrição ainda não foi aprovada.')
+            return redirect('accounts:dashboard')
+
+    context = {
+        'course': course,
+        'announcements': course.announcements.all(),
+    }
+    return render(request, template_name, context)
+
+
+@login_required
+def show_announcement(request, slug, pk):
+    template_name = 'courses/show_announcement.html'
+    course = get_object_or_404(Course, slug=slug)
+
+    if not request.user.is_staff:
+        enrollment = get_object_or_404(request.user.enrollments.all(), course=course)
+
+        if not enrollment.is_approved():
+            messages.error(request, 'A sua inscrição ainda não foi aprovada.')
+            return redirect('accounts:dashboard')
+
+    announcement = get_object_or_404(course.announcements.all(), pk=pk)
+    form = CommentForm(request.POST or None)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.user = request.user
+        comment.announcement = announcement
+        comment.save()
+        form = CommentForm()
+        messages.success(request, 'Seu comentário foi enviado com sucesso.')
+    context = {
+        'course': course,
+        'announcement': announcement,
+        'form': form,
+    }
     return render(request, template_name, context)

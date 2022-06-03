@@ -1,7 +1,12 @@
+from multiprocessing import context
+
+from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.shortcuts import redirect, render
+
+from simplemooc.courses.models import Enrollment
 
 from .forms import EditAccountForm, RegisterForm
 
@@ -10,7 +15,8 @@ from .forms import EditAccountForm, RegisterForm
 @login_required
 def dashboard(request):
     template_name = 'accounts/dashboard.html'
-    return render(request, template_name)
+    context = {}
+    return render(request, template_name, context)
 
 
 def register(request):
@@ -41,8 +47,8 @@ def edit(request):
         form = EditAccountForm(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
-            form = EditAccountForm(instance=request.user)
-            context['success'] = True
+            messages.success(request, 'Os dados da sua conta foram alterados com sucesso.')
+            return redirect('accounts:dashboard')
     else:
         form = EditAccountForm(instance=request.user)
     context['form'] = form
@@ -57,7 +63,8 @@ def edit_password(request):
         form = PasswordChangeForm(data=request.POST, user=request.user)
         if form.is_valid():
             form.save()
-            context['success'] = True
+            messages.success(request, 'A sua senha foi alterada com sucesso!')
+            return redirect('accounts:dashboard')
     else:
         form = PasswordChangeForm(user=request.user)
     context['form'] = form
