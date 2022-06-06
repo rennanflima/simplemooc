@@ -8,9 +8,9 @@
 
 {% block menu_options %}
     <li class="pure-menu-heading">{{ course }}</li>
-    <li><a href="#"><i class="fa fa-video-camera">&nbsp;</i>Aulas e Materiais</a></li>
+    <li><a href="{% url 'courses:lessons' course.slug %}"><i class="fa fa-video-camera">&nbsp;</i>Aulas e Materiais</a></li>
     <li><a href="#"><i class="fa fa-info-circle">&nbsp;</i>Informações</a></li>
-    <li><a href="#"><i class="fa fa-envelope">&nbsp;</i>Anúncios</a></li>
+    <li><a href="{% url 'courses:announcements' course.slug %}"><i class="fa fa-envelope">&nbsp;</i>Anúncios</a></li>
     <li><a href="#"><i class="fa fa-comments">&nbsp;</i>Fórum de Dúvidas</a></li>
     {{ block.super }}
 {% endblock menu_options %}

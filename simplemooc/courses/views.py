@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
+from .decorators import enrollment_required
 from .forms import CommentForm, ContactCourse
 from .models import Course, Enrollment
 
@@ -67,15 +68,10 @@ def undo_enrollment(request, slug):
 
 
 @login_required
+@enrollment_required
 def announcements(request, slug):
     template_name = 'courses/announcements.html'
-    course = get_object_or_404(Course, slug=slug)
-    if not request.user.is_staff:
-        enrollment = get_object_or_404(request.user.enrollments.all(), course=course)
-
-        if not enrollment.is_approved():
-            messages.error(request, 'A sua inscrição ainda não foi aprovada.')
-            return redirect('accounts:dashboard')
+    course = request.course
 
     context = {
         'course': course,
@@ -85,16 +81,10 @@ def announcements(request, slug):
 
 
 @login_required
+@enrollment_required
 def show_announcement(request, slug, pk):
     template_name = 'courses/show_announcement.html'
-    course = get_object_or_404(Course, slug=slug)
-
-    if not request.user.is_staff:
-        enrollment = get_object_or_404(request.user.enrollments.all(), course=course)
-
-        if not enrollment.is_approved():
-            messages.error(request, 'A sua inscrição ainda não foi aprovada.')
-            return redirect('accounts:dashboard')
+    course = request.course
 
     announcement = get_object_or_404(course.announcements.all(), pk=pk)
     form = CommentForm(request.POST or None)
@@ -109,5 +99,65 @@ def show_announcement(request, slug, pk):
         'course': course,
         'announcement': announcement,
         'form': form,
+    }
+    return render(request, template_name, context)
+
+
+@login_required
+@enrollment_required
+def lessons(request, slug):
+    template_name = 'courses/lessons.html'
+    course = request.course
+
+    if request.user.is_staff:
+        lessons = course.lessons.all()
+    else:
+        lessons = course.release_lessons()
+
+    context = {
+        'course': course,
+        'lessons': lessons,
+    }
+    return render(request, template_name, context)
+
+
+@login_required
+@enrollment_required
+def show_lesson(request, slug, pk):
+    template_name = 'courses/show_lesson.html'
+    course = request.course
+    lesson = get_object_or_404(course.lessons.all(), pk=pk)
+
+    if not request.user.is_staff and not lesson.is_available():
+        messages.error(request, 'Esta aula não está disponível para você.')
+        return redirect('courses:lessons', slug=course.slug)
+
+    context = {
+        'course': course,
+        'lesson': lesson,
+    }
+    return render(request, template_name, context)
+
+
+@login_required
+@enrollment_required
+def material(request, slug, lesson_id, pk):
+    template_name = 'courses/material.html'
+    course = request.course
+    lesson = get_object_or_404(course.lessons.all(), pk=lesson_id)
+
+    if not request.user.is_staff and not lesson.is_available():
+        messages.error(request, 'Esta aula não está disponível para você.')
+        return redirect('courses:lessons', slug=course.slug)
+
+    material = get_object_or_404(lesson.materials.all(), pk=pk)
+
+    if not material.is_embedded:
+        return redirect(material.file.url)
+
+    context = {
+        'course': course,
+        'lesson': lesson,
+        'material': material,
     }
     return render(request, template_name, context)
