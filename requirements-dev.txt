@@ -14,3 +14,4 @@ jupyter
 pip-autoremove
 pipdeptree
 rich
+model_mommy
