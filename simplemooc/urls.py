@@ -23,6 +23,7 @@ urlpatterns = [
     path('conta/', include('simplemooc.accounts.urls', namespace='accounts')),
     path('', include('simplemooc.core.urls', namespace='core')),
     path('cursos/', include('simplemooc.courses.urls', namespace='courses')),
+    path('forum/', include('simplemooc.forum.urls', namespace='forum')),
 ]
 
 if settings.DEBUG:

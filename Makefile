@@ -38,7 +38,7 @@ clean_migrations: ## Limpa as migrações
 	@find . -path "*/migrations/*.pyc"  -delete
 
 ## @testes
-.PHONY: test coverage functional_tests sec
+.PHONY: test coverage sec
 test: $(INSTALL_STAMP) ## Roda testes
 	@$(BIN)/python manage.py test $(ARG)
 
@@ -47,9 +47,6 @@ coverage: $(INSTALL_STAMP) ## Roda cobertura de testes
 	@$(BIN)/coverage report
 	@$(BIN)/coverage html
 	@$(BIN)/coverage xml
-
-functional_tests:$(INSTALL_STAMP) ## Roda testes funcionais com behave
-	@$(PYTHON) manage.py behave
 
 sec: $(INSTALL_STAMP) ## Verifica se tem alguma vulnerabilidade nas bibliotecas que foram instaladas
 	@$(BIN)/safety check --ignore=41002 --full-report
