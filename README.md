@@ -1,7 +1,5 @@
 # Simple Mooc
 
-Projeto desenvolvido no Curso Python 3 na Web com Django (Básico e Intermediário)
-
 O *Simple Massive Open Online Course* (Simple Mooc) é uma plataforma simples para o ensino a distância, focada em cursos abertos e massivos.
 
 #### Funcionalidades
@@ -10,6 +8,8 @@ O *Simple Massive Open Online Course* (Simple Mooc) é uma plataforma simples pa
 - Fórum de dúvidas: fórum geral e aberto, com tópicos separados por categoria. Para responder a um tópico o usuário precisa estar logado;
 - Sistema de avisos: mural de avisos, onde esses avisos serão enviados para os alunos por e-mail e uma página onde os alunos paderão comentar;
 - Sistema de contas (usuários): os usuário poderão realizar o autocadastro e logar no sitema. Após o login, os usuários poderão alterar o seu perfil.
+
+> Projeto desenvolvido no Curso Python 3 na Web com Django (Básico e Intermediário) da Udemy
 
 ## Devolpment Setup
 
